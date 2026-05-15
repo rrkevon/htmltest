@@ -1,0 +1,34 @@
+# v2 copy of the project — change `name` below if you deploy a separate Render service.
+#
+# Render Blueprint for the HTML basics test backend.
+#
+# How to use:
+#   1. Push this repo to GitHub.
+#   2. On Render: New + → Blueprint → pick this repo → Apply.
+#   3. After it's created, set the env vars listed below (Render will prompt
+#      for the ones marked `sync: false`).
+#   4. Storage: this app uses Neon Postgres. Create a free Neon project,
+#      copy the connection string (the one ending in ?sslmode=require),
+#      and paste it as DATABASE_URL in Render.
+#
+# After deploy you'll get a URL like https://html-basics-test-v2.onrender.com
+# (name must differ from your v1 service on the same Render account).
+# Paste that URL into the v2 Android app's SUBMIT_BASE_URL and rebuild the APK.
+
+services:
+  - type: web
+    name: html-basics-test-v2
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: HTML_TEST_ADMIN_TOKEN
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false

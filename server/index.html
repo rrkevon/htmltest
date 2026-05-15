@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HTML basics test server — checks</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f1419;
+      --card: #1a2332;
+      --text: #e6edf3;
+      --muted: #8b9cb3;
+      --ok: #3fb950;
+      --err: #f85149;
+      --btn: #238636;
+      --btn-h: #2ea043;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f6f8fa;
+        --card: #fff;
+        --text: #1f2328;
+        --muted: #656d76;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: system-ui, Segoe UI, Roboto, sans-serif;
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 1.5rem;
+    }
+    main {
+      max-width: 42rem;
+      margin: 0 auto;
+    }
+    h1 { font-size: 1.25rem; font-weight: 600; margin: 0 0 0.5rem; }
+    p.sub { color: var(--muted); margin: 0 0 1.5rem; font-size: 0.9rem; }
+    section {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+      border: 1px solid color-mix(in srgb, var(--muted) 25%, transparent);
+    }
+    section h2 { font-size: 0.95rem; margin: 0 0 0.75rem; font-weight: 600; }
+    button {
+      background: var(--btn);
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    button:hover { background: var(--btn-h); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      max-width: 20rem;
+      padding: 0.45rem 0.6rem;
+      border-radius: 6px;
+      border: 1px solid color-mix(in srgb, var(--muted) 40%, transparent);
+      background: var(--bg);
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    pre {
+      margin: 0.75rem 0 0;
+      padding: 0.75rem;
+      border-radius: 6px;
+      overflow: auto;
+      font-size: 0.8rem;
+      background: color-mix(in srgb, var(--bg) 85%, var(--muted));
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .status { font-size: 0.85rem; margin-top: 0.5rem; }
+    .status.ok { color: var(--ok); }
+    .status.err { color: var(--err); }
+    .row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Server smoke tests</h1>
+    <p class="sub">
+      Open this page from the same host as the API (e.g. <code>/index.html</code> or site root if default document is set).
+      Calls use relative URLs so they work on HTTP or HTTPS.
+    </p>
+
+    <section>
+      <h2>Health</h2>
+      <p class="sub" style="margin:0 0 0.75rem">GET <code>/health.php</code> — should return <code>{"ok":true}</code>.</p>
+      <div class="row">
+        <button type="button" id="btnHealth">Run health check</button>
+      </div>
+      <div id="healthStatus" class="status" aria-live="polite"></div>
+      <pre id="healthOut" hidden></pre>
+    </section>
+
+    <section>
+      <h2>List submissions (admin)</h2>
+      <p class="sub" style="margin:0 0 0.75rem">GET <code>/api/submissions.php?token=…</code> — use the token in <code>config.local.php</code> on the host (or <code>devtoken</code> if that file is missing).</p>
+      <label for="token">Admin token</label><br />
+      <input type="password" id="token" name="token" autocomplete="off" placeholder="Paste admin token" />
+      <div class="row" style="margin-top:0.5rem">
+        <button type="button" id="btnSubs">Load submissions</button>
+      </div>
+      <div id="subsStatus" class="status" aria-live="polite"></div>
+      <pre id="subsOut" hidden></pre>
+    </section>
+  </main>
+  <script>
+    function setStatus(el, ok, msg) {
+      el.textContent = msg;
+      el.className = "status " + (ok ? "ok" : "err");
+    }
+
+    document.getElementById("btnHealth").addEventListener("click", async () => {
+      const status = document.getElementById("healthStatus");
+      const out = document.getElementById("healthOut");
+      const btn = document.getElementById("btnHealth");
+      btn.disabled = true;
+      out.hidden = true;
+      setStatus(status, true, "Requesting…");
+      try {
+        const r = await fetch("/health.php", { headers: { Accept: "application/json" } });
+        const text = await r.text();
+        out.textContent = text;
+        out.hidden = false;
+        if (r.ok) {
+          try {
+            const j = JSON.parse(text);
+            setStatus(status, j.ok === true, r.status + " " + r.statusText + (j.ok === true ? " — API OK" : " — unexpected JSON"));
+          } catch {
+            setStatus(status, false, r.status + " — response is not JSON");
+          }
+        } else {
+          setStatus(status, false, r.status + " " + r.statusText);
+        }
+      } catch (e) {
+        setStatus(status, false, "Network error: " + e.message);
+      }
+      btn.disabled = false;
+    });
+
+    document.getElementById("btnSubs").addEventListener("click", async () => {
+      const status = document.getElementById("subsStatus");
+      const out = document.getElementById("subsOut");
+      const btn = document.getElementById("btnSubs");
+      const token = document.getElementById("token").value.trim();
+      btn.disabled = true;
+      out.hidden = true;
+      if (!token) {
+        setStatus(status, false, "Enter the admin token first.");
+        btn.disabled = false;
+        return;
+      }
+      setStatus(status, true, "Requesting…");
+      try {
+        const url = "/api/submissions.php?token=" + encodeURIComponent(token);
+        const r = await fetch(url, { headers: { Accept: "application/json" } });
+        const text = await r.text();
+        out.textContent = text;
+        out.hidden = false;
+        if (r.status === 401) {
+          setStatus(status, false, "401 — wrong or missing token");
+        } else if (r.ok) {
+          setStatus(status, true, r.status + " " + r.statusText);
+        } else {
+          setStatus(status, false, r.status + " " + r.statusText);
+        }
+      } catch (e) {
+        setStatus(status, false, "Network error: " + e.message);
+      }
+      btn.disabled = false;
+    });
+  </script>
+</body>
+</html>
