@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -36,7 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.htmlbasicstest.app.data.Exercise
-import com.htmlbasicstest.app.data.ExerciseBank
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,10 +56,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun HtmlTestApp(vm: HtmlTestViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
-    // On the Intro screen there is no session yet, so use the full bank count for the button label.
-    // For Question/Review screens the order in state is what's used (shuffled per session).
-    val totalQuestions =
-        if (state.orderedExercises.isEmpty()) ExerciseBank.exercises.size else state.orderedExercises.size
 
     Column(
         modifier = Modifier
@@ -74,13 +70,13 @@ fun HtmlTestApp(vm: HtmlTestViewModel = viewModel()) {
             fontWeight = FontWeight.Bold,
         )
         Text(
-            text = "A short quiz on what your class has covered so far.",
+            text = "Questions load from your class server. No quiz is stored inside the app.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
         when (state.screen) {
-            TestScreen.Intro -> IntroContent(vm, state, totalQuestions)
+            TestScreen.Intro -> IntroContent(vm, state)
             TestScreen.Question -> QuestionContent(vm, state, state.orderedExercises)
             TestScreen.Review -> ReviewContent(vm, state, state.orderedExercises)
             TestScreen.Done -> DoneContent(vm, state)
@@ -89,16 +85,53 @@ fun HtmlTestApp(vm: HtmlTestViewModel = viewModel()) {
 }
 
 @Composable
-private fun IntroContent(vm: HtmlTestViewModel, state: HtmlTestUiState, total: Int) {
-    OutlinedTextField(
-        value = state.participantLabel,
-        onValueChange = { vm.setParticipantLabel(it) },
-        modifier = Modifier.fillMaxWidth(),
-        singleLine = true,
-        label = { Text("Name or ID (optional)") },
-        placeholder = { Text("Shown on the server with your answers") },
-    )
-    Button(onClick = { vm.startTest() }) { Text("Begin ($total questions)") }
+private fun IntroContent(vm: HtmlTestViewModel, state: HtmlTestUiState) {
+    when (state.quizLoadState) {
+        QuizLoadState.Loading -> {
+            Text("Loading quiz…", style = MaterialTheme.typography.bodyLarge)
+            Spacer(Modifier.height(12.dp))
+            CircularProgressIndicator()
+        }
+        QuizLoadState.NoTest -> {
+            Text(
+                text = state.quizMessage?.takeIf { it.isNotBlank() } ?: "No test at this time.",
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Spacer(Modifier.height(12.dp))
+            OutlinedButton(onClick = { vm.refreshQuiz() }) { Text("Check again") }
+        }
+        QuizLoadState.Error -> {
+            Text(
+                text = state.quizMessage ?: "Could not load the quiz.",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyLarge,
+            )
+            Spacer(Modifier.height(12.dp))
+            OutlinedButton(onClick = { vm.refreshQuiz() }) { Text("Retry") }
+        }
+        QuizLoadState.Ready -> {
+            OutlinedTextField(
+                value = state.participantLabel,
+                onValueChange = { vm.setParticipantLabel(it) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                label = { Text("Name or ID (optional)") },
+                placeholder = { Text("Shown on the server with your answers") },
+            )
+            state.quizMessage?.takeIf { it.isNotBlank() }?.let { note ->
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = note,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = { vm.startTest() }) {
+                Text("Begin (${state.canonicalExercises.size} questions)")
+            }
+        }
+    }
 }
 
 @Composable

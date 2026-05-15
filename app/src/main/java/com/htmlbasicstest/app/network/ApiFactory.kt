@@ -8,7 +8,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object ApiFactory {
-    fun submissionApi(baseUrl: String = BuildConfig.SUBMIT_BASE_URL): SubmissionApi {
+    private fun retrofit(baseUrl: String = BuildConfig.SUBMIT_BASE_URL): Retrofit {
         val normalized = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
         val logging = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BASIC
@@ -18,7 +18,7 @@ object ApiFactory {
             .readTimeout(20, TimeUnit.SECONDS)
             .addInterceptor { chain ->
                 val req = chain.request().newBuilder()
-                    .header("User-Agent", "HtmlBasicsTest/1.0 (Android)")
+                    .header("User-Agent", "HtmlBasicsTest-v2/1.0 (Android)")
                     .build()
                 chain.proceed(req)
             }
@@ -29,6 +29,11 @@ object ApiFactory {
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(SubmissionApi::class.java)
     }
+
+    fun submissionApi(baseUrl: String = BuildConfig.SUBMIT_BASE_URL): SubmissionApi =
+        retrofit(baseUrl).create(SubmissionApi::class.java)
+
+    fun quizApi(baseUrl: String = BuildConfig.SUBMIT_BASE_URL): QuizApi =
+        retrofit(baseUrl).create(QuizApi::class.java)
 }

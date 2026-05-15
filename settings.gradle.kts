@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "HTML Basics Test"
+rootProject.name = "HTML Basics Test v2"
 include(":app")

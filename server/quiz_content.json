@@ -1,5 +1,5 @@
 {
-  "$note": "Display-only copy for the teacher review page. Keep in sync with app/src/main/java/com/htmlbasicstest/app/data/ExerciseBank.kt",
+  "$note": "Question bank for students + teacher review. Optional per-item \"level\" (e.g. beginner) is used when quiz_publish.json mode is \"filter\". Which ids go live is controlled only by quiz_publish.json (not the app). Keep answer_key.json in sync for every id you publish.",
 
   "1": {
     "type": "mcq",

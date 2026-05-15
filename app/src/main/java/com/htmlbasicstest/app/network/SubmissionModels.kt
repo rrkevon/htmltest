@@ -12,6 +12,8 @@ data class AnswerPayload(
 data class SubmissionPayload(
     @SerializedName("participantLabel") val participantLabel: String?,
     @SerializedName("clientSubmittedAt") val clientSubmittedAt: String,
+    /** Must match server quiz_publish.json revision or submit is rejected. */
+    @SerializedName("quizRevision") val quizRevision: Int,
     @SerializedName("answers") val answers: List<AnswerPayload>,
 )
 

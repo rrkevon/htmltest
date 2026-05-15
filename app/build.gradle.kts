@@ -8,17 +8,16 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.htmlbasicstest.app"
+        applicationId = "com.htmlbasicstest.app.v2"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
-        // Render + Neon backend (HTTPS, no trailing slash).
-        // After your first Render deploy, replace the host below with the URL Render gives you
-        // (e.g. "https://html-basics-test.onrender.com").
-        // For local Node testing, temporarily swap to "http://10.0.2.2:3847" (emulator) or
-        // "http://YOUR_PC_LAN_IP:3847" (physical device on same Wi‑Fi).
+        // Production: Render HTTPS API (no trailing slash). App posts to …/api/submissions.php
+        // If Render ever gives you a new hostname, change only the string below.
+        // Local Node: use "http://10.0.2.2:3847" (emulator) or "http://YOUR_PC_LAN_IP:3847" (phone + PC Wi‑Fi)
+        // and uncomment cleartext in res/xml/network_security_config.xml.
         buildConfigField("String", "SUBMIT_BASE_URL", "\"https://html-basics-test.onrender.com\"")
     }
 
