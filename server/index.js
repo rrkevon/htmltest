@@ -56,6 +56,8 @@ const STORE = path.join(DATA_DIR, "submissions.ndjson");
 const ANSWER_KEY_PATH = path.join(__dirname, "answer_key.json");
 const QUIZ_CONTENT_PATH = path.join(__dirname, "quiz_content.json");
 const QUIZ_PUBLISH_PATH = path.join(__dirname, "quiz_publish.json");
+/** Built Android APK shipped with the server (Render serves this path; same folder as in the repo). */
+const APK_DEPLOY_PATH = path.join(__dirname, "Apk", "HTML-Test-App.apk");
 /** Upper bound for exercise ids from the bank (sanity check). */
 const MAX_EXERCISE_ID = 9999;
 
@@ -837,6 +839,20 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 app.get("/health.php", (_req, res) => res.json({ ok: true }));
 app.get("/download-app.html", (_req, res) => {
   res.sendFile(path.join(__dirname, "download-app.html"));
+});
+/** Same-origin APK download (reliable on mobile; file must exist in repo at server/Apk/HTML-Test-App.apk). */
+app.get("/Apk/HTML-Test-App.apk", (_req, res) => {
+  if (!fs.existsSync(APK_DEPLOY_PATH)) {
+    return res
+      .status(404)
+      .type("text/plain")
+      .send(
+        "APK not on this server. Commit server/Apk/HTML-Test-App.apk to git (see .gitignore exception), push, and redeploy.",
+      );
+  }
+  res.setHeader("Content-Type", "application/vnd.android.package-archive");
+  res.setHeader("Content-Disposition", 'attachment; filename="HTML-Test-App.apk"');
+  res.sendFile(APK_DEPLOY_PATH);
 });
 app.get("/api/quiz", handleGetQuiz);
 app.get("/api/quiz.php", handleGetQuiz);
