@@ -20,12 +20,41 @@ import pg from "pg";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 3847);
-const ADMIN_TOKEN = process.env.HTML_TEST_ADMIN_TOKEN || "devtoken";
+
+/** Trim + treat empty env as unset so Render/newlines mismatches don't brick admin GET. */
+function readAdminToken() {
+  const raw = process.env.HTML_TEST_ADMIN_TOKEN;
+  if (raw == null) return "devtoken";
+  const s = String(raw).trim();
+  return s === "" ? "devtoken" : s;
+}
+
+const ADMIN_TOKEN = readAdminToken();
 const DATABASE_URL = process.env.DATABASE_URL || "";
+
+function readQueryToken(query) {
+  const t = query?.token;
+  if (Array.isArray(t)) return String(t[0] ?? "").trim();
+  return String(t ?? "").trim();
+}
+
+/** Query ?token=… or header Authorization: Bearer … (easier if the secret has URL-awkward characters). */
+function readRequestAdminToken(req) {
+  const fromQuery = readQueryToken(req.query);
+  if (fromQuery) return fromQuery;
+  const auth = req.headers.authorization;
+  if (typeof auth === "string" && auth.toLowerCase().startsWith("bearer ")) {
+    return auth.slice(7).trim();
+  }
+  return "";
+}
 
 const DATA_DIR = path.join(__dirname, "data");
 const STORE = path.join(DATA_DIR, "submissions.ndjson");
 const ANSWER_KEY_PATH = path.join(__dirname, "answer_key.json");
+const QUIZ_CONTENT_PATH = path.join(__dirname, "quiz_content.json");
+/** Must match ExerciseBank size and validateBody. */
+const EXPECTED_QUESTION_COUNT = 30;
 
 function ensureDataDir() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -49,6 +78,166 @@ function loadAnswerKey() {
   answerKeyCache = out;
   answerKeyMtime = stat.mtimeMs;
   return out;
+}
+
+// ---------- Teacher review (HTML) ----------
+
+let quizContentCache = null;
+
+function loadQuizContent() {
+  if (quizContentCache) return quizContentCache;
+  const raw = fs.readFileSync(QUIZ_CONTENT_PATH, "utf8");
+  const json = JSON.parse(raw);
+  const out = {};
+  for (const [k, v] of Object.entries(json)) {
+    if (!k || k.startsWith("$")) continue;
+    if (v && typeof v === "object") out[k] = v;
+  }
+  quizContentCache = out;
+  return out;
+}
+
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/** Plain-text line for one MCQ choice letter + label (caller escapes for HTML). */
+function formatMcqLine(choices, choiceId) {
+  if (choiceId == null || String(choiceId).trim() === "") return "(no answer)";
+  const id = String(choiceId).trim().toLowerCase();
+  const line = choices?.[id];
+  if (!line) return `${id}) (choice not found on question card)`;
+  return `${id}) ${line}`;
+}
+
+function formatCorrectLine(keyRow, quizRow) {
+  if (!keyRow || typeof keyRow !== "object") return "(no answer key)";
+  if (keyRow.type === "mcq") {
+    return formatMcqLine(quizRow?.choices, keyRow.correctChoiceId);
+  }
+  if (keyRow.type === "text") {
+    const arr = Array.isArray(keyRow.acceptedAnswers) ? keyRow.acceptedAnswers : [];
+    return arr.length ? arr.join(" · ") : "(no accepted answers listed)";
+  }
+  return "(unknown type)";
+}
+
+function formatStudentLine(ansRow, keyRow, quizRow) {
+  if (!keyRow || typeof keyRow !== "object") return "(unknown)";
+  if (keyRow.type === "mcq") {
+    return formatMcqLine(quizRow?.choices, ansRow?.selectedChoiceId);
+  }
+  const t = ansRow?.typedAnswer;
+  if (t == null || String(t).trim() === "") return "(blank)";
+  return String(t);
+}
+
+function buildReviewPageHtml(submissions) {
+  const key = loadAnswerKey();
+  const quiz = loadQuizContent();
+  const parts = [];
+  parts.push(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>HTML basics test — marker review</title>
+<style>
+  :root { --bg:#f0f2f7; --card:#fff; --text:#161922; --muted:#5a6270; --ok:#0b5c36; --bad:#8f1e1e; --border:#cfd6e4; }
+  body { font-family: system-ui, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); margin:0; padding: 1rem 1.1rem 2.5rem; line-height:1.5; }
+  h1 { font-size: 1.35rem; margin: 0 0 0.35rem; }
+  .subhead { color: var(--muted); margin: 0 0 1.25rem; font-size: 0.95rem; max-width: 52rem; }
+  .submission { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.15rem; margin-bottom: 1.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+  .submeta { font-size: 0.86rem; color: var(--muted); margin: 0 0 0.85rem; line-height: 1.4; }
+  .score { font-weight: 700; font-size: 1.05rem; color: var(--text); margin-bottom: 0.75rem; }
+  .q { border: 1px solid var(--border); border-radius: 8px; padding: 0.65rem 0.85rem; margin-bottom: 0.55rem; background: #fafbff; }
+  .qhead { display: flex; flex-wrap: wrap; align-items: center; gap: 0.45rem 0.75rem; margin-bottom: 0.3rem; }
+  .qid { font-weight: 700; }
+  .ok { background: #daf3e4; color: var(--ok); padding: 0.12rem 0.45rem; border-radius: 4px; font-size: 0.78rem; font-weight: 700; }
+  .bad { background: #fde2e2; color: var(--bad); padding: 0.12rem 0.45rem; border-radius: 4px; font-size: 0.78rem; font-weight: 700; }
+  .prompt { margin: 0.15rem 0 0.45rem; }
+  .choices { margin: 0.25rem 0 0.35rem; }
+  .choices strong { font-size: 0.78rem; color: var(--muted); }
+  .choices ul { margin: 0.2rem 0 0; padding-left: 1.15rem; }
+  .choices li { margin: 0.12rem 0; }
+  code { font-family: ui-monospace, Consolas, monospace; background: #e8ecf4; padding: 0.06rem 0.3rem; border-radius: 3px; font-size: 0.86em; }
+  pre.code { margin: 0.3rem 0 0.2rem; padding: 0.55rem 0.7rem; background: #1e2430; color: #e8ecf1; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; line-height: 1.38; white-space: pre-wrap; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.45rem 1rem; margin-top: 0.4rem; }
+  @media (max-width: 760px) { .row { grid-template-columns: 1fr; } }
+  .lbl { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; }
+  .val { font-size: 0.92rem; word-break: break-word; }
+  .hint { font-size: 0.82rem; color: var(--muted); margin: 0.3rem 0 0; }
+  .empty { color: var(--muted); padding: 1rem 0; }
+</style>
+</head>
+<body>
+<h1>HTML basics test — marker review</h1>
+<p class="subhead">Submissions are listed newest first. Each question shows the wording your students saw, every multiple-choice option (letters <code>a</code>–<code>d</code> match what is stored and graded; the app may shuffle the order of buttons on the phone), the student’s answer, what the answer key accepts as correct, and auto-mark correct/incorrect. Scores are at the top of each submission; you can still award partial credit outside this page.</p>`);
+
+  if (!Array.isArray(submissions) || submissions.length === 0) {
+    parts.push('<p class="empty">No submissions yet.</p></body></html>');
+    return parts.join("\n");
+  }
+
+  for (const sub of submissions) {
+    const label = sub.participantLabel ? escapeHtml(sub.participantLabel) : "<em>(no name)</em>";
+    const score = `${sub.scoreTotal ?? "?"}/${sub.scoreMax ?? "?"}`;
+    parts.push(`<section class="submission">
+<div class="score">Score: ${escapeHtml(String(score))} — ${label}</div>
+<div class="submeta">
+<strong>Submission id</strong> <code>${escapeHtml(sub.id)}</code><br/>
+<strong>Received (server)</strong> ${escapeHtml(sub.receivedAt ?? "")}<br/>
+<strong>Sent from device</strong> ${escapeHtml(sub.clientSubmittedAt ?? "")}<br/>
+<strong>User agent</strong> ${escapeHtml(sub.userAgent ?? "")}
+</div>`);
+
+    const ansById = Object.fromEntries((sub.answers || []).map((a) => [String(a.exerciseId), a]));
+    const gradeById = Object.fromEntries((sub.graded || []).map((g) => [String(g.exerciseId), g]));
+
+    for (let i = 1; i <= EXPECTED_QUESTION_COUNT; i++) {
+      const sid = String(i);
+      const quizRow = quiz[sid] || {};
+      const keyRow = key[sid];
+      const ansRow = ansById[sid] || {};
+      const gr = gradeById[sid];
+      const correct = gr?.correct === true;
+      const badge = correct ? '<span class="ok">Correct</span>' : '<span class="bad">Incorrect</span>';
+      const title = escapeHtml(quizRow.title || `Question ${i}`);
+      const prompt = escapeHtml(quizRow.prompt || "(no prompt in quiz_content.json — sync ExerciseBank.kt)");
+      let bodyExtra = "";
+      if (quizRow.choices && typeof quizRow.choices === "object") {
+        bodyExtra += '<div class="choices"><strong>All choices (as on the student’s device)</strong><ul>';
+        for (const [cid, text] of Object.entries(quizRow.choices)) {
+          bodyExtra += `<li><code>${escapeHtml(cid)}</code> — ${escapeHtml(text)}</li>`;
+        }
+        bodyExtra += "</ul></div>";
+      }
+      if (quizRow.code) {
+        bodyExtra += `<div class="lbl" style="margin-top:0.35rem">Code / blank</div><pre class="code">${escapeHtml(quizRow.code)}</pre>`;
+      }
+      if (quizRow.studentHint) {
+        bodyExtra += `<p class="hint"><strong>On-screen hint:</strong> ${escapeHtml(quizRow.studentHint)}</p>`;
+      }
+      const studentLine = formatStudentLine(ansRow, keyRow, quizRow);
+      const correctLine = formatCorrectLine(keyRow, quizRow);
+      parts.push(`<article class="q">
+<div class="qhead"><span class="qid">Q${i}</span> ${badge}<span style="color:var(--muted);font-size:0.88rem">${title}</span></div>
+<p class="prompt">${prompt}</p>
+${bodyExtra}
+<div class="row">
+  <div><div class="lbl">Student answer</div><div class="val">${escapeHtml(studentLine)}</div></div>
+  <div><div class="lbl">Marked correct (answer key)</div><div class="val">${escapeHtml(correctLine)}</div></div>
+</div>
+</article>`);
+    }
+    parts.push("</section>");
+  }
+  parts.push("</body></html>");
+  return parts.join("\n");
 }
 
 function normalizeText(s) {
@@ -102,8 +291,6 @@ function gradeSubmission(answers) {
 }
 
 // ---------- Validation ----------
-
-const EXPECTED_QUESTION_COUNT = 30;
 
 function summarizeAnswers(answers) {
   if (!Array.isArray(answers)) return [];
@@ -262,7 +449,7 @@ async function handlePostSubmission(req, res) {
 }
 
 async function handleGetSubmissions(req, res) {
-  const token = String(req.query.token || "");
+  const token = readRequestAdminToken(req);
   if (token !== ADMIN_TOKEN) {
     return res.status(401).json({ ok: false, error: "unauthorized" });
   }
@@ -275,10 +462,35 @@ async function handleGetSubmissions(req, res) {
   }
 }
 
+async function handleGetReview(req, res) {
+  const token = readRequestAdminToken(req);
+  if (token !== ADMIN_TOKEN) {
+    return res
+      .status(401)
+      .type("html")
+      .send(
+        "<!DOCTYPE html><html><head><meta charset='utf-8'/><title>Unauthorized</title></head><body><h1>Unauthorized</h1><p>Add <code>?token=…</code> or an <code>Authorization: Bearer …</code> header with your admin token.</p></body></html>",
+      );
+  }
+  try {
+    const submissions = await storageList();
+    const html = buildReviewPageHtml(submissions);
+    res.type("html").send(html);
+  } catch (e) {
+    console.error("review page failed", e);
+    res
+      .status(500)
+      .type("html")
+      .send("<!DOCTYPE html><html><body><h1>Server error</h1><p>Could not build review page.</p></body></html>");
+  }
+}
+
 app.post("/api/submissions", handlePostSubmission);
 app.post("/api/submissions.php", handlePostSubmission);
 app.get("/api/submissions", handleGetSubmissions);
 app.get("/api/submissions.php", handleGetSubmissions);
+app.get("/review", handleGetReview);
+app.get("/review.html", handleGetReview);
 
 async function main() {
   if (pool) {
@@ -294,7 +506,12 @@ async function main() {
   }
   app.listen(PORT, () => {
     console.log(`HTML basics test server listening on ${PORT}`);
-    console.log(`Admin: GET /api/submissions.php?token=${ADMIN_TOKEN === "devtoken" ? "devtoken (DEFAULT, change me!)" : "***"}`);
+    const authHint =
+      ADMIN_TOKEN === "devtoken"
+        ? "devtoken (DEFAULT — set HTML_TEST_ADMIN_TOKEN in Render)"
+        : `secret configured (${ADMIN_TOKEN.length} chars after trim)`;
+    console.log(`Admin JSON: GET /api/submissions.php?token=… (${authHint})`);
+    console.log("Admin review (HTML): GET /review?token=…");
   });
 }
 
