@@ -835,6 +835,9 @@ app.get("/", (_req, res) => {
 });
 app.get("/health", (_req, res) => res.json({ ok: true }));
 app.get("/health.php", (_req, res) => res.json({ ok: true }));
+app.get("/download-app.html", (_req, res) => {
+  res.sendFile(path.join(__dirname, "download-app.html"));
+});
 app.get("/api/quiz", handleGetQuiz);
 app.get("/api/quiz.php", handleGetQuiz);
 app.get("/manage-quiz", handleGetManageQuiz);
