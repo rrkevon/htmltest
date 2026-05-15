@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html
+  lang="en"
+  data-github-repo="YOUR_USER/YOUR_REPO"
+  data-github-branch="main"
+>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Download HTML Basics Test (Android)</title>
+  <style>
+    :root {
+      --bg1: #0f172a;
+      --bg2: #1e293b;
+      --card: rgba(255, 255, 255, 0.06);
+      --border: rgba(255, 255, 255, 0.12);
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent2: #818cf8;
+      --shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 600px at 10% -10%, #312e81 0%, transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, #0e7490 0%, transparent 50%),
+        linear-gradient(165deg, var(--bg1), var(--bg2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .card {
+      width: 100%;
+      max-width: 26rem;
+      padding: 2rem 1.75rem 1.75rem;
+      border-radius: 1.25rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      text-align: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.75rem;
+    }
+    h1 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      line-height: 1.25;
+      margin: 0 0 0.5rem;
+    }
+    p.lead {
+      margin: 0 0 1.5rem;
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    a.download {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 0.95rem 1.25rem;
+      border-radius: 0.75rem;
+      font-size: 1.05rem;
+      font-weight: 600;
+      text-decoration: none;
+      color: #0f172a;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow: 0 8px 24px rgba(56, 189, 248, 0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    a.download:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px rgba(129, 140, 248, 0.4);
+    }
+    a.download:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 3px;
+    }
+    a.download.is-disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      transform: none;
+      box-shadow: none;
+    }
+    .hint {
+      margin-top: 1.25rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.45;
+      text-align: left;
+    }
+    .hint code {
+      font-size: 0.78em;
+      padding: 0.12rem 0.35rem;
+      border-radius: 0.35rem;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border);
+    }
+    .file {
+      margin-top: 0.75rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">Android</div>
+    <h1>HTML Basics Test</h1>
+    <p class="lead">Get the app (APK). After download, open the file on your phone and allow installs from this source if prompted.</p>
+    <a class="download" id="apk-link" href="#">Download APK</a>
+    <p class="file">GitHub path: <code>server/Apk/HTML-Test-App.apk</code></p>
+    <p class="hint" id="setup-hint">
+      <strong>One-time setup:</strong> on the <code>&lt;html&gt;</code> tag at the top of this file, set
+      <code>data-github-repo="YourGitHubUser/your-repo-name"</code> (and optionally
+      <code>data-github-branch</code> if not <code>main</code>). Then open this page again or redeploy.
+    </p>
+  </div>
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var raw = (root.getAttribute("data-github-repo") || "").trim();
+      var branch = (root.getAttribute("data-github-branch") || "main").trim();
+      var link = document.getElementById("apk-link");
+      var hint = document.getElementById("setup-hint");
+      var parts = raw.split("/").map(function (s) { return s.trim(); }).filter(Boolean);
+      var looksPlaceholder = /YOUR_USER|YOUR_REPO/i.test(raw);
+      if (parts.length === 2 && !looksPlaceholder) {
+        var owner = encodeURIComponent(parts[0]);
+        var repo = encodeURIComponent(parts[1]);
+        var br = encodeURIComponent(branch);
+        link.href =
+          "https://github.com/" +
+          owner +
+          "/" +
+          repo +
+          "/raw/refs/heads/" +
+          br +
+          "/server/Apk/HTML-Test-App.apk";
+        link.setAttribute("download", "HTML-Test-App.apk");
+        hint.hidden = true;
+      } else {
+        link.classList.add("is-disabled");
+        link.addEventListener("click", function (e) {
+          e.preventDefault();
+          hint.hidden = false;
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
