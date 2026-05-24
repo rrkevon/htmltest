@@ -1,9 +1,5 @@
 <!DOCTYPE html>
-<html
-  lang="en"
-  data-github-repo="YOUR_USER/YOUR_REPO"
-  data-github-branch="main"
->
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -95,31 +91,25 @@
       outline: 2px solid var(--accent);
       outline-offset: 3px;
     }
-    a.download.is-disabled {
-      cursor: not-allowed;
-      opacity: 0.55;
-      transform: none;
-      box-shadow: none;
-    }
-    .hint {
-      margin-top: 1.25rem;
-      font-size: 0.8rem;
+    .file {
+      margin-top: 1rem;
+      font-size: 0.82rem;
       color: var(--muted);
-      line-height: 1.45;
-      text-align: left;
+      word-break: break-all;
     }
-    .hint code {
-      font-size: 0.78em;
+    .file code {
+      font-size: 0.85em;
       padding: 0.12rem 0.35rem;
       border-radius: 0.35rem;
       background: rgba(0, 0, 0, 0.25);
       border: 1px solid var(--border);
     }
-    .file {
-      margin-top: 0.75rem;
-      font-size: 0.82rem;
+    .note {
+      margin-top: 1.1rem;
+      font-size: 0.78rem;
       color: var(--muted);
-      word-break: break-all;
+      line-height: 1.45;
+      text-align: left;
     }
   </style>
 </head>
@@ -127,46 +117,15 @@
   <div class="card">
     <div class="badge">Android</div>
     <h1>HTML Basics Test</h1>
-    <p class="lead">Get the app (APK). After download, open the file on your phone and allow installs from this source if prompted.</p>
-    <a class="download" id="apk-link" href="#">Download APK</a>
-    <p class="file">GitHub path: <code>server/Apk/HTML-Test-App.apk</code></p>
-    <p class="hint" id="setup-hint">
-      <strong>One-time setup:</strong> on the <code>&lt;html&gt;</code> tag at the top of this file, set
-      <code>data-github-repo="YourGitHubUser/your-repo-name"</code> (and optionally
-      <code>data-github-branch</code> if not <code>main</code>). Then open this page again or redeploy.
+    <p class="lead">Get the app (APK) from this website. On your phone, open the file and allow installs from this source if prompted.</p>
+    <!-- Same host as this page (Render). Path is NOT the repo folder name "server" in the URL — Render's app root is already `server/`. -->
+    <a class="download" href="/Apk/HTML-Test-App.apk" download="HTML-Test-App.apk">Download APK</a>
+    <p class="file">
+      Served from this server at <code>/Apk/HTML-Test-App.apk</code> (file in repo: <code>server/Apk/HTML-Test-App.apk</code>)
+    </p>
+    <p class="note">
+      Render only ships files that are in your Git repo. If you see “not found”, add the APK under <code>server/Apk/</code>, commit, push, and redeploy. The root <code>.gitignore</code> ignores most APKs; an exception must allow this one file.
     </p>
   </div>
-  <script>
-    (function () {
-      var root = document.documentElement;
-      var raw = (root.getAttribute("data-github-repo") || "").trim();
-      var branch = (root.getAttribute("data-github-branch") || "main").trim();
-      var link = document.getElementById("apk-link");
-      var hint = document.getElementById("setup-hint");
-      var parts = raw.split("/").map(function (s) { return s.trim(); }).filter(Boolean);
-      var looksPlaceholder = /YOUR_USER|YOUR_REPO/i.test(raw);
-      if (parts.length === 2 && !looksPlaceholder) {
-        var owner = encodeURIComponent(parts[0]);
-        var repo = encodeURIComponent(parts[1]);
-        var br = encodeURIComponent(branch);
-        link.href =
-          "https://github.com/" +
-          owner +
-          "/" +
-          repo +
-          "/raw/refs/heads/" +
-          br +
-          "/server/Apk/HTML-Test-App.apk";
-        link.setAttribute("download", "HTML-Test-App.apk");
-        hint.hidden = true;
-      } else {
-        link.classList.add("is-disabled");
-        link.addEventListener("click", function (e) {
-          e.preventDefault();
-          hint.hidden = false;
-        });
-      }
-    })();
-  </script>
 </body>
 </html>

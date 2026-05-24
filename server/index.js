@@ -56,6 +56,8 @@ const STORE = path.join(DATA_DIR, "submissions.ndjson");
 const ANSWER_KEY_PATH = path.join(__dirname, "answer_key.json");
 const QUIZ_CONTENT_PATH = path.join(__dirname, "quiz_content.json");
 const QUIZ_PUBLISH_PATH = path.join(__dirname, "quiz_publish.json");
+/** Built Android APK shipped with the server (Render serves this path; same folder as in the repo). */
+const APK_DEPLOY_PATH = path.join(__dirname, "Apk", "HTML-Test-App.apk");
 /** Upper bound for exercise ids from the bank (sanity check). */
 const MAX_EXERCISE_ID = 9999;
 
@@ -125,6 +127,7 @@ function loadQuizPublishConfig() {
 
 async function refreshPublishConfigFromStorage() {
   publishConfigMem = null;
+  invalidatePublishedSnapshotCache();
   if (pool) {
     try {
       const { rows } = await pool.query(`SELECT config FROM quiz_settings WHERE id = 1`);
@@ -139,11 +142,16 @@ async function refreshPublishConfigFromStorage() {
   publishConfigMem = readQuizPublishFile();
 }
 
+function invalidatePublishedSnapshotCache() {
+  publishedSnapshotCache = null;
+}
+
 async function savePublishConfig(next) {
   const clean = { ...next };
   for (const k of Object.keys(clean)) {
     if (k.startsWith("$")) delete clean[k];
   }
+  invalidatePublishedSnapshotCache();
   publishConfigMem = clean;
   if (pool) {
     await pool.query(
@@ -168,6 +176,9 @@ function shuffleInPlace(arr) {
   return arr;
 }
 
+/** Cached so GET /api/quiz and POST /api/submissions see the same exercise ids (filter mode used to re-randomize every request). */
+let publishedSnapshotCache = null;
+
 function buildPublishedSnapshot() {
   const cfg = loadQuizPublishConfig();
   const revNum = Number(cfg.revision);
@@ -178,7 +189,12 @@ function buildPublishedSnapshot() {
   const bank = loadQuizContent();
   const mode = String(cfg.mode || "explicit").toLowerCase();
   let ids = [];
-  if (mode === "filter") {
+  if (mode === "filter" && Array.isArray(cfg.resolvedExerciseIds) && cfg.resolvedExerciseIds.length > 0) {
+    ids = cfg.resolvedExerciseIds
+      .map((x) => Number(x))
+      .filter((n) => Number.isInteger(n) && n >= 1 && n <= MAX_EXERCISE_ID);
+    ids = [...new Set(ids)];
+  } else if (mode === "filter") {
     const levels = new Set((cfg.filterLevels || ["beginner"]).map(String));
     const types = new Set((cfg.filterTypes || ["mcq", "short", "fill"]).map(String));
     const maxCount = Math.min(500, Math.max(1, Number(cfg.maxCount) || 30));
@@ -222,6 +238,13 @@ function buildPublishedSnapshot() {
   return { active: true, revision, exerciseIds: ids, message: cfg.message ?? null };
 }
 
+function getPublishedSnapshot() {
+  if (!publishedSnapshotCache) {
+    publishedSnapshotCache = buildPublishedSnapshot();
+  }
+  return publishedSnapshotCache;
+}
+
 function bankRowToApiExercise(id, row) {
   if (!row || typeof row !== "object") return null;
   const t = String(row.type || "");
@@ -263,7 +286,7 @@ function bankRowToApiExercise(id, row) {
 
 function handleGetQuiz(_req, res) {
   try {
-    const snap = buildPublishedSnapshot();
+    const snap = getPublishedSnapshot();
     if (!snap.active) {
       return res.json({
         ok: true,
@@ -438,6 +461,13 @@ async function handlePostManageQuiz(req, res) {
       maxCount,
       shuffleQuestions,
     };
+    if (mode === "filter") {
+      publishConfigMem = next;
+      invalidatePublishedSnapshotCache();
+      next.resolvedExerciseIds = buildPublishedSnapshot().exerciseIds;
+    } else {
+      delete next.resolvedExerciseIds;
+    }
     await savePublishConfig(next);
     res.redirect(302, `/manage-quiz?token=${encodeURIComponent(token)}&saved=1`);
   } catch (err) {
@@ -678,7 +708,7 @@ function validateBody(body) {
     for (let i = 1; i <= 30; i++) {
       if (!seen.has(i)) return { ok: false, error: "missing_exercise_id" };
     }
-    const snap = buildPublishedSnapshot();
+    const snap = getPublishedSnapshot();
     if (!snap.active || snap.exerciseIds.length !== 30) {
       return { ok: false, error: "quiz_revision" };
     }
@@ -689,7 +719,7 @@ function validateBody(body) {
     return { ok: true, publishedExerciseIds: [...Array(30)].map((_, i) => i + 1), quizRevision: 0 };
   }
 
-  const snap = buildPublishedSnapshot();
+  const snap = getPublishedSnapshot();
   if (!snap.active) return { ok: false, error: "no_active_quiz" };
   const rev = Number(body.quizRevision);
   if (!Number.isInteger(rev) || rev !== snap.revision) {
@@ -835,6 +865,23 @@ app.get("/", (_req, res) => {
 });
 app.get("/health", (_req, res) => res.json({ ok: true }));
 app.get("/health.php", (_req, res) => res.json({ ok: true }));
+app.get("/download-app.html", (_req, res) => {
+  res.sendFile(path.join(__dirname, "download-app.html"));
+});
+/** Same-origin APK download (reliable on mobile; file must exist in repo at server/Apk/HTML-Test-App.apk). */
+app.get("/Apk/HTML-Test-App.apk", (_req, res) => {
+  if (!fs.existsSync(APK_DEPLOY_PATH)) {
+    return res
+      .status(404)
+      .type("text/plain")
+      .send(
+        "APK not on this server. Commit server/Apk/HTML-Test-App.apk to git (see .gitignore exception), push, and redeploy.",
+      );
+  }
+  res.setHeader("Content-Type", "application/vnd.android.package-archive");
+  res.setHeader("Content-Disposition", 'attachment; filename="HTML-Test-App.apk"');
+  res.sendFile(APK_DEPLOY_PATH);
+});
 app.get("/api/quiz", handleGetQuiz);
 app.get("/api/quiz.php", handleGetQuiz);
 app.get("/manage-quiz", handleGetManageQuiz);
@@ -926,6 +973,14 @@ async function main() {
     console.log("No DATABASE_URL set — using local NDJSON storage at", STORE);
   }
   await refreshPublishConfigFromStorage();
+  const bootCfg = loadQuizPublishConfig();
+  if (String(bootCfg.mode || "").toLowerCase() === "filter" && !bootCfg.resolvedExerciseIds?.length) {
+    publishConfigMem = bootCfg;
+    invalidatePublishedSnapshotCache();
+    const snap = buildPublishedSnapshot();
+    await savePublishConfig({ ...bootCfg, resolvedExerciseIds: snap.exerciseIds });
+    console.log("Pinned filter-mode exercise ids for stable quiz/submit matching.");
+  }
   app.listen(PORT, () => {
     console.log(`HTML basics test server listening on ${PORT}`);
     const authHint =

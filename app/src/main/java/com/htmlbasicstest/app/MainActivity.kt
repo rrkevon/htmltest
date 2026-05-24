@@ -1,10 +1,22 @@
 package com.htmlbasicstest.app
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,7 +24,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -30,9 +44,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -41,6 +58,10 @@ import com.htmlbasicstest.app.data.Exercise
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE,
+        )
         enableEdgeToEdge()
         setContent {
             val scheme = lightColorScheme()
@@ -56,30 +77,110 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun HtmlTestApp(vm: HtmlTestViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val isLoadingQuiz = state.quizLoadState == QuizLoadState.Loading
+    val isSubmitting = state.isSubmitting
+    val showLoadingOverlay = isLoadingQuiz || isSubmitting
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp)
-            .verticalScroll(rememberScrollState()),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Text(
+                text = "HTML basics",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = "Questions load from your class server. No quiz is stored inside the app.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
+            when (state.screen) {
+                TestScreen.Intro -> IntroContent(vm, state)
+                TestScreen.Question -> QuestionContent(vm, state, state.orderedExercises)
+                TestScreen.Review -> ReviewContent(vm, state, state.orderedExercises)
+                TestScreen.Done -> DoneContent(vm, state)
+            }
+        }
+
+        LoadingOverlay(
+            visible = showLoadingOverlay,
+            title = when {
+                isSubmitting -> "Submitting your answers"
+                else -> "Connecting to class server"
+            },
+            message = when {
+                isSubmitting ->
+                    "Sending your work to the server. Please keep the app open — this can take up to 2 minutes if the server was idle."
+                else ->
+                    "Loading the quiz. If the server has been idle, the first connection can take 1–2 minutes on free hosting."
+            },
+        )
+    }
+}
+
+@Composable
+private fun LoadingOverlay(
+    visible: Boolean,
+    title: String,
+    message: String,
+) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(animationSpec = tween(250)),
+        exit = fadeOut(animationSpec = tween(200)),
     ) {
-        Text(
-            text = "HTML basics",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-        )
-        Text(
-            text = "Questions load from your class server. No quiz is stored inside the app.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        when (state.screen) {
-            TestScreen.Intro -> IntroContent(vm, state)
-            TestScreen.Question -> QuestionContent(vm, state, state.orderedExercises)
-            TestScreen.Review -> ReviewContent(vm, state, state.orderedExercises)
-            TestScreen.Done -> DoneContent(vm, state)
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center,
+        ) {
+            val pulse = rememberInfiniteTransition(label = "loadingPulse")
+            val scale by pulse.animateFloat(
+                initialValue = 0.94f,
+                targetValue = 1.06f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(900, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Reverse,
+                ),
+                label = "cardScale",
+            )
+            Card(
+                modifier = Modifier
+                    .padding(horizontal = 32.dp)
+                    .scale(scale),
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
+            ) {
+                Column(
+                    modifier = Modifier.padding(horizontal = 28.dp, vertical = 32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(52.dp),
+                        strokeWidth = 4.dp,
+                    )
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                    )
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
+            }
         }
     }
 }
@@ -88,9 +189,7 @@ fun HtmlTestApp(vm: HtmlTestViewModel = viewModel()) {
 private fun IntroContent(vm: HtmlTestViewModel, state: HtmlTestUiState) {
     when (state.quizLoadState) {
         QuizLoadState.Loading -> {
-            Text("Loading quiz…", style = MaterialTheme.typography.bodyLarge)
-            Spacer(Modifier.height(12.dp))
-            CircularProgressIndicator()
+            // Full-screen LoadingOverlay handles feedback; keep layout stable underneath.
         }
         QuizLoadState.NoTest -> {
             Text(
@@ -283,7 +382,7 @@ private fun ReviewContent(
             onClick = { vm.submit() },
             enabled = !state.isSubmitting,
         ) {
-            Text(if (state.isSubmitting) "Sending…" else "Submit to server")
+            Text("Submit to server")
         }
     }
 }

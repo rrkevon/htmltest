@@ -120,7 +120,7 @@ class HtmlTestViewModel : ViewModel() {
                     _state.update {
                         it.copy(
                             quizLoadState = QuizLoadState.Error,
-                            quizMessage = e.message ?: "Could not reach server",
+                            quizMessage = ApiFactory.messageForNetworkFailure(e, "load the quiz"),
                         )
                     }
                 },
@@ -261,7 +261,7 @@ class HtmlTestViewModel : ViewModel() {
                     _state.update {
                         it.copy(
                             isSubmitting = false,
-                            submitMessage = "Could not reach server: ${e.message ?: "error"}",
+                            submitMessage = ApiFactory.messageForSubmitFailure(e),
                         )
                     }
                 },

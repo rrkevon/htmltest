@@ -8,6 +8,7 @@
 **/build/
 /captures/
 *.apk
+!server/Apk/HTML-Test-App.apk
 *.ap_
 *.aab
 
