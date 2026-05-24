@@ -1,0 +1,809 @@
+{
+  "$schema_note": "Each exercise id maps to its grading info. For 'mcq' the correctChoiceId is the id of the right choice. For 'text' (short-text and fill-blank) acceptedAnswers is a list; grading lowercases and trims input but does NOT strip angle brackets, so '<p>' and 'p' are different on purpose.",
+  "1": {
+    "type": "mcq",
+    "correctChoiceId": "c"
+  },
+  "2": {
+    "type": "mcq",
+    "correctChoiceId": "b"
+  },
+  "3": {
+    "type": "mcq",
+    "correctChoiceId": "a"
+  },
+  "4": {
+    "type": "mcq",
+    "correctChoiceId": "b"
+  },
+  "5": {
+    "type": "mcq",
+    "correctChoiceId": "d"
+  },
+  "6": {
+    "type": "mcq",
+    "correctChoiceId": "a"
+  },
+  "7": {
+    "type": "mcq",
+    "correctChoiceId": "c"
+  },
+  "8": {
+    "type": "mcq",
+    "correctChoiceId": "d"
+  },
+  "9": {
+    "type": "mcq",
+    "correctChoiceId": "a"
+  },
+  "10": {
+    "type": "mcq",
+    "correctChoiceId": "b"
+  },
+  "11": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<p>"
+    ]
+  },
+  "12": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<h1>"
+    ]
+  },
+  "13": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<h2>"
+    ]
+  },
+  "14": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<br>",
+      "<br/>",
+      "<br />"
+    ]
+  },
+  "15": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<strong>"
+    ]
+  },
+  "16": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<em>"
+    ]
+  },
+  "17": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<a>"
+    ]
+  },
+  "18": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<img>"
+    ]
+  },
+  "19": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<html>"
+    ]
+  },
+  "20": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<head>"
+    ]
+  },
+  "21": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<body>"
+    ]
+  },
+  "22": {
+    "type": "text",
+    "acceptedAnswers": [
+      "href"
+    ]
+  },
+  "23": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</p>"
+    ]
+  },
+  "24": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<h1>"
+    ]
+  },
+  "25": {
+    "type": "text",
+    "acceptedAnswers": [
+      "href"
+    ]
+  },
+  "26": {
+    "type": "text",
+    "acceptedAnswers": [
+      "src"
+    ]
+  },
+  "27": {
+    "type": "text",
+    "acceptedAnswers": [
+      "alt"
+    ]
+  },
+  "28": {
+    "type": "text",
+    "acceptedAnswers": [
+      "body"
+    ]
+  },
+  "29": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</strong>"
+    ]
+  },
+  "30": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</a>"
+    ]
+  },
+  "31": {
+    "type": "mcq",
+    "correctChoiceId": "a"
+  },
+  "32": {
+    "type": "mcq",
+    "correctChoiceId": "d"
+  },
+  "33": {
+    "type": "mcq",
+    "correctChoiceId": "c"
+  },
+  "34": {
+    "type": "mcq",
+    "correctChoiceId": "b"
+  },
+  "35": {
+    "type": "mcq",
+    "correctChoiceId": "a"
+  },
+  "36": {
+    "type": "mcq",
+    "correctChoiceId": "d"
+  },
+  "37": {
+    "type": "mcq",
+    "correctChoiceId": "c"
+  },
+  "38": {
+    "type": "mcq",
+    "correctChoiceId": "b"
+  },
+  "39": {
+    "type": "mcq",
+    "correctChoiceId": "a"
+  },
+  "40": {
+    "type": "mcq",
+    "correctChoiceId": "d"
+  },
+  "41": {
+    "type": "mcq",
+    "correctChoiceId": "c"
+  },
+  "42": {
+    "type": "mcq",
+    "correctChoiceId": "b"
+  },
+  "43": {
+    "type": "mcq",
+    "correctChoiceId": "a"
+  },
+  "44": {
+    "type": "mcq",
+    "correctChoiceId": "d"
+  },
+  "45": {
+    "type": "mcq",
+    "correctChoiceId": "c"
+  },
+  "46": {
+    "type": "mcq",
+    "correctChoiceId": "b"
+  },
+  "47": {
+    "type": "mcq",
+    "correctChoiceId": "a"
+  },
+  "48": {
+    "type": "mcq",
+    "correctChoiceId": "d"
+  },
+  "49": {
+    "type": "mcq",
+    "correctChoiceId": "c"
+  },
+  "50": {
+    "type": "mcq",
+    "correctChoiceId": "b"
+  },
+  "51": {
+    "type": "mcq",
+    "correctChoiceId": "a"
+  },
+  "52": {
+    "type": "mcq",
+    "correctChoiceId": "d"
+  },
+  "53": {
+    "type": "mcq",
+    "correctChoiceId": "c"
+  },
+  "54": {
+    "type": "mcq",
+    "correctChoiceId": "b"
+  },
+  "55": {
+    "type": "mcq",
+    "correctChoiceId": "a"
+  },
+  "56": {
+    "type": "mcq",
+    "correctChoiceId": "d"
+  },
+  "57": {
+    "type": "mcq",
+    "correctChoiceId": "c"
+  },
+  "58": {
+    "type": "mcq",
+    "correctChoiceId": "b"
+  },
+  "59": {
+    "type": "mcq",
+    "correctChoiceId": "a"
+  },
+  "60": {
+    "type": "mcq",
+    "correctChoiceId": "d"
+  },
+  "61": {
+    "type": "mcq",
+    "correctChoiceId": "c"
+  },
+  "62": {
+    "type": "mcq",
+    "correctChoiceId": "b"
+  },
+  "63": {
+    "type": "mcq",
+    "correctChoiceId": "a"
+  },
+  "64": {
+    "type": "mcq",
+    "correctChoiceId": "d"
+  },
+  "65": {
+    "type": "mcq",
+    "correctChoiceId": "c"
+  },
+  "66": {
+    "type": "mcq",
+    "correctChoiceId": "b"
+  },
+  "67": {
+    "type": "mcq",
+    "correctChoiceId": "a"
+  },
+  "68": {
+    "type": "mcq",
+    "correctChoiceId": "d"
+  },
+  "69": {
+    "type": "mcq",
+    "correctChoiceId": "c"
+  },
+  "70": {
+    "type": "mcq",
+    "correctChoiceId": "b"
+  },
+  "71": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<ul>"
+    ]
+  },
+  "72": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<ol>"
+    ]
+  },
+  "73": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<li>"
+    ]
+  },
+  "74": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<table>"
+    ]
+  },
+  "75": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<tr>"
+    ]
+  },
+  "76": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<td>"
+    ]
+  },
+  "77": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<th>"
+    ]
+  },
+  "78": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<hr>",
+      "<hr/>",
+      "<hr />"
+    ]
+  },
+  "79": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<div>"
+    ]
+  },
+  "80": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<span>"
+    ]
+  },
+  "81": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<main>"
+    ]
+  },
+  "82": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<nav>"
+    ]
+  },
+  "83": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<footer>"
+    ]
+  },
+  "84": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<header>"
+    ]
+  },
+  "85": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<section>"
+    ]
+  },
+  "86": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<article>"
+    ]
+  },
+  "87": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<caption>"
+    ]
+  },
+  "88": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</ul>"
+    ]
+  },
+  "89": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</tr>"
+    ]
+  },
+  "90": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</td>"
+    ]
+  },
+  "91": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</div>"
+    ]
+  },
+  "92": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</span>"
+    ]
+  },
+  "93": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</article>"
+    ]
+  },
+  "94": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</section>"
+    ]
+  },
+  "95": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</main>"
+    ]
+  },
+  "96": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</nav>"
+    ]
+  },
+  "97": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</footer>"
+    ]
+  },
+  "98": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</header>"
+    ]
+  },
+  "99": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<title>"
+    ]
+  },
+  "100": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</title>"
+    ]
+  },
+  "101": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<!--"
+    ]
+  },
+  "102": {
+    "type": "text",
+    "acceptedAnswers": [
+      "-->"
+    ]
+  },
+  "103": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<!doctype html>",
+      "<!DOCTYPE html>"
+    ]
+  },
+  "104": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<meta charset=\"utf-8\">",
+      "<meta charset='utf-8'>"
+    ]
+  },
+  "105": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</em>"
+    ]
+  },
+  "106": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</strong>"
+    ]
+  },
+  "107": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</h3>"
+    ]
+  },
+  "108": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<h3>"
+    ]
+  },
+  "109": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<h4>"
+    ]
+  },
+  "110": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<h5>"
+    ]
+  },
+  "111": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<h6>"
+    ]
+  },
+  "112": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</h6>"
+    ]
+  },
+  "113": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</table>"
+    ]
+  },
+  "114": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</li>"
+    ]
+  },
+  "115": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</ol>"
+    ]
+  },
+  "116": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</p>"
+    ]
+  },
+  "117": {
+    "type": "text",
+    "acceptedAnswers": [
+      "class"
+    ]
+  },
+  "118": {
+    "type": "text",
+    "acceptedAnswers": [
+      "id"
+    ]
+  },
+  "119": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</li>"
+    ]
+  },
+  "120": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<li>"
+    ]
+  },
+  "121": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</ul>"
+    ]
+  },
+  "122": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<ol>"
+    ]
+  },
+  "123": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<table>"
+    ]
+  },
+  "124": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<tr>"
+    ]
+  },
+  "125": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<td>"
+    ]
+  },
+  "126": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<th>"
+    ]
+  },
+  "127": {
+    "type": "text",
+    "acceptedAnswers": [
+      "src"
+    ]
+  },
+  "128": {
+    "type": "text",
+    "acceptedAnswers": [
+      "href"
+    ]
+  },
+  "129": {
+    "type": "text",
+    "acceptedAnswers": [
+      "alt"
+    ]
+  },
+  "130": {
+    "type": "text",
+    "acceptedAnswers": [
+      "lang"
+    ]
+  },
+  "131": {
+    "type": "text",
+    "acceptedAnswers": [
+      "target"
+    ]
+  },
+  "132": {
+    "type": "text",
+    "acceptedAnswers": [
+      "class"
+    ]
+  },
+  "133": {
+    "type": "text",
+    "acceptedAnswers": [
+      "id"
+    ]
+  },
+  "134": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</td>"
+    ]
+  },
+  "135": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</tr>"
+    ]
+  },
+  "136": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</table>"
+    ]
+  },
+  "137": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</div>"
+    ]
+  },
+  "138": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</span>"
+    ]
+  },
+  "139": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<main>"
+    ]
+  },
+  "140": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<nav>"
+    ]
+  },
+  "141": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<footer>"
+    ]
+  },
+  "142": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<section>"
+    ]
+  },
+  "143": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<article>"
+    ]
+  },
+  "144": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</h2>"
+    ]
+  },
+  "145": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<h2>"
+    ]
+  },
+  "146": {
+    "type": "text",
+    "acceptedAnswers": [
+      "</h3>"
+    ]
+  },
+  "147": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<!--"
+    ]
+  },
+  "148": {
+    "type": "text",
+    "acceptedAnswers": [
+      "-->"
+    ]
+  },
+  "149": {
+    "type": "text",
+    "acceptedAnswers": [
+      "doctype"
+    ]
+  },
+  "150": {
+    "type": "text",
+    "acceptedAnswers": [
+      "<tbody>"
+    ]
+  }
+}
